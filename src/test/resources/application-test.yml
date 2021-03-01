@@ -1,0 +1,10 @@
+kafka:
+  consumer:
+    bootstrapServers: ${spring.embedded.kafka.brokers}
+    groupId: test-consumer
+    topic: "consumerTest"
+    replayTopic: "replayTest"
+  producer:
+    bootstrapServersDLT: ${spring.embedded.kafka.brokers}
+    dltTopic: "INT_TEST_DLT"
+    bootstrapServers: ${spring.embedded.kafka.brokers}
