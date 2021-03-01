@@ -3,6 +3,7 @@ package com.example.kafkabestpractices.consumer;
 import com.example.kafkabestpractices.consumer.utils.IntegrationTestPublisher;
 import com.example.kafkabestpractices.model.DeadLetterMessage;
 import com.example.kafkabestpractices.model.Student;
+import com.example.kafkabestpractices.model.StudentEvent;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -44,15 +45,15 @@ public class EmbeddedKafkaConfig {
     }
 
     @Bean("testDeadLetterConsumer")
-    public Consumer<Long, DeadLetterMessage<Student>> testDeadLetterConsumer(EmbeddedKafkaBroker embeddedKafkaBroker) {
+    public Consumer<Long, DeadLetterMessage> testDeadLetterConsumer(EmbeddedKafkaBroker embeddedKafkaBroker) {
         Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(brokerAddresses, "consumerDltGroupId", "true");
         consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         consumerProps.put(JsonDeserializer.VALUE_DEFAULT_TYPE, DeadLetterMessage.class);
         consumerProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
-        DefaultKafkaConsumerFactory<Long, DeadLetterMessage<Student>> defaultKafkaConsumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
-        Consumer<Long, DeadLetterMessage<Student>> deadLetterMessageConsumer = defaultKafkaConsumerFactory.createConsumer("consumerDltGroupId", "IntegrationTest");
+        DefaultKafkaConsumerFactory<Long, DeadLetterMessage> defaultKafkaConsumerFactory = new DefaultKafkaConsumerFactory<>(consumerProps);
+        Consumer<Long, DeadLetterMessage> deadLetterMessageConsumer = defaultKafkaConsumerFactory.createConsumer("consumerDltGroupId", "IntegrationTest");
         embeddedKafkaBroker.consumeFromAnEmbeddedTopic(deadLetterMessageConsumer, STUDENT_EVENT_DLT_TOPIC);
 
         return deadLetterMessageConsumer;

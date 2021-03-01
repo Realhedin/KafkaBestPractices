@@ -2,6 +2,7 @@ package com.example.kafkabestpractices.consumer;
 
 import com.example.kafkabestpractices.exceptions.ExceptionClassifier;
 import com.example.kafkabestpractices.exceptions.ExceptionType;
+import com.example.kafkabestpractices.model.DeadLetterMessage;
 import com.example.kafkabestpractices.model.StudentEvent;
 import com.example.kafkabestpractices.processor.StudentEventProcessor;
 import lombok.Builder;
@@ -15,15 +16,12 @@ import org.springframework.kafka.listener.AbstractConsumerSeekAware;
 @Slf4j
 @Builder
 public class ConsumerWithDeadLetterRecoverer extends AbstractConsumerSeekAware {
-    private final KafkaTemplate<Long, StudentEvent> producerTemplate;
+    private final KafkaTemplate<Long, DeadLetterMessage> producerTemplate;
     ExceptionClassifier exceptionClassifier;
     StudentEventProcessor studentEventProcessor;
 
-    @Value("${kafka.consumer.topic}")
-    String topic;
-
-    @Value("${kafka.consumer.groupId}")
-    String groupId;
+    @Value("${kafka.producer.dltTopic}")
+    String dltTopic;
 
     @KafkaListener(
             topics = {"${kafka.consumer.topic}", "${kafka.consumer.replayTopic}"},
@@ -45,6 +43,11 @@ public class ConsumerWithDeadLetterRecoverer extends AbstractConsumerSeekAware {
                 log.error("Received transient resource exception, do not proceed, keep retrying..", exception);
 
                 throw exception;
+            } else {
+                producerTemplate.send(dltTopic, 123L, DeadLetterMessage.builder()
+                        .keyMessage("Exception message")
+                        .valueMessage(studentEvent)
+                        .build()).get();
             }
         }
     }

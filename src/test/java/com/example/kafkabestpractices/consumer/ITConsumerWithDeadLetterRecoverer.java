@@ -9,6 +9,7 @@ import com.example.kafkabestpractices.model.StudentEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.connect.errors.NotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.ActiveProfiles;
@@ -37,7 +39,7 @@ class ITConsumerWithDeadLetterRecoverer {
     @Autowired
     Consumer<Long, String> testStudentConsumer;
     @Autowired
-    Consumer<Long, DeadLetterMessage<Student>> testDeadLetterConsumer;
+    Consumer<Long, DeadLetterMessage> testDeadLetterConsumer;
 
     @Autowired
     private ConsumerWithDeadLetterRecoverer consumerWithDeadLetterRecoverer;
@@ -57,9 +59,22 @@ class ITConsumerWithDeadLetterRecoverer {
                         .build(),null));
         ConsumerRecords<Long, String> consumerRecords = KafkaTestUtils.getRecords(testStudentConsumer, 5000,1);
         Assertions.assertEquals(1, consumerRecords.count());
-        ConsumerRecords<Long, DeadLetterMessage<Student>> dltRecords = KafkaTestUtils.getRecords(testDeadLetterConsumer, 5000,1);
+        ConsumerRecords<Long, DeadLetterMessage> dltRecords = KafkaTestUtils.getRecords(testDeadLetterConsumer, 5000,1);
         Assertions.assertEquals(0, dltRecords.count());
+    }
 
+    @Test
+    public void deadLetterTest() {
+        Long key = 1L;
+        integrationTestPublisher.produce(kafkaTopic,key,
+                ErrorHandlerTestingUtils.getSendingMessageAsString(StudentEvent.builder()
+                        .student(Student.builder().name("bob").build())
+                        .exceptionClass(NotFoundException.class)
+                        .build(), NotFoundException.class));
+        ConsumerRecords<Long, String> consumerRecords = KafkaTestUtils.getRecords(testStudentConsumer, 1000,1);
+        Assertions.assertEquals(1, consumerRecords.count());
+        ConsumerRecords<Long, DeadLetterMessage> dltRecords = KafkaTestUtils.getRecords(testDeadLetterConsumer, 5000,2);
+        Assertions.assertEquals(1, dltRecords.count());
     }
 
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DeadLetterMessage<E> {
+public class DeadLetterMessage<StudentEvent> {
     private String keyMessage;
-    private E valueMessage;
+    private StudentEvent valueMessage;
 }
