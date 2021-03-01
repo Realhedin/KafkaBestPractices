@@ -1,0 +1,7 @@
+package com.example.kafkabestpractices.exceptions.types;
+
+public class DataNotFoundException extends RuntimeException {
+    public DataNotFoundException(String message) {
+        super(message);
+    }
+}
