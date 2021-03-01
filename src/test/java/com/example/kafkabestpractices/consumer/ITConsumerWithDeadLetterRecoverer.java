@@ -5,6 +5,7 @@ import com.example.kafkabestpractices.consumer.utils.ErrorHandlerTestingUtils;
 import com.example.kafkabestpractices.consumer.utils.IntegrationTestPublisher;
 import com.example.kafkabestpractices.model.DeadLetterMessage;
 import com.example.kafkabestpractices.model.Student;
+import com.example.kafkabestpractices.model.StudentEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -51,7 +52,9 @@ class ITConsumerWithDeadLetterRecoverer {
     public void postitiveTest() {
         Long key = 1L;
         integrationTestPublisher.produce(kafkaTopic,key,
-                ErrorHandlerTestingUtils.getSendingMessageAsString(Student.builder().name("Bob").build(),null));
+                ErrorHandlerTestingUtils.getSendingMessageAsString(StudentEvent.builder()
+                        .student(Student.builder().name("bob").build())
+                        .build(),null));
         ConsumerRecords<Long, String> consumerRecords = KafkaTestUtils.getRecords(testStudentConsumer, 5000,1);
         Assertions.assertEquals(1, consumerRecords.count());
         ConsumerRecords<Long, DeadLetterMessage<Student>> dltRecords = KafkaTestUtils.getRecords(testDeadLetterConsumer, 5000,1);

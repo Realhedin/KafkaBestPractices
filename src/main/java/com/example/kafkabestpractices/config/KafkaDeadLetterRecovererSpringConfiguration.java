@@ -6,8 +6,6 @@ import com.example.kafkabestpractices.exceptions.ExceptionClassifier;
 import com.example.kafkabestpractices.processor.StudentEventProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.annotation.EnableKafka;
-import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Collections;
@@ -16,7 +14,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Configuration
-@EnableKafka
 public class KafkaDeadLetterRecovererSpringConfiguration {
 
     @Bean
